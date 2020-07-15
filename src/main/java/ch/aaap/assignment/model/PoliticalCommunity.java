@@ -11,4 +11,10 @@ public interface PoliticalCommunity {
   public String getShortName();
 
   public LocalDate getLastUpdate();
+
+  public District getDistrict();
+
+  public default Canton getCanton() {
+    return getDistrict().getCanton();
+  }
 }

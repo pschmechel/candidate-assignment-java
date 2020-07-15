@@ -25,12 +25,12 @@ public class DefaultModelFactory {
         .map(DefaultModelFactory::mapToDefaultPoliticalCommunity)
         .collect(Collectors.toSet());
 
-    Set<Canton> cantons = politicalCommunities.stream()
-        .map(DefaultModelFactory::mapToDefaultCanton)
+    Set<District> districts = defaultPoliticalCommunities.stream()
+        .map(PoliticalCommunity::getDistrict)
         .collect(Collectors.toSet());
 
-    Set<District> districts = politicalCommunities.stream()
-        .map(DefaultModelFactory::mapToDefaultDistrict)
+    Set<Canton> cantons = districts.stream()
+        .map(District::getCanton)
         .collect(Collectors.toSet());
 
     return DefaultModel.builder()
@@ -57,13 +57,7 @@ public class DefaultModelFactory {
         .name(pc.getName())
         .shortName(pc.getShortName())
         .lastUpdate(pc.getLastUpdate())
-        .build();
-  }
-
-  private static DefaultCanton mapToDefaultCanton(CSVPoliticalCommunity pc) {
-    return DefaultCanton.builder()
-        .code(pc.getCantonCode())
-        .name(pc.getCantonName())
+        .district(mapToDefaultDistrict(pc))
         .build();
   }
 
@@ -71,6 +65,14 @@ public class DefaultModelFactory {
     return DefaultDistrict.builder()
         .number(pc.getDistrictNumber())
         .name(pc.getDistrictName())
+        .canton(mapToDefaultCanton(pc))
+        .build();
+  }
+
+  private static DefaultCanton mapToDefaultCanton(CSVPoliticalCommunity pc) {
+    return DefaultCanton.builder()
+        .code(pc.getCantonCode())
+        .name(pc.getCantonName())
         .build();
   }
 
@@ -83,30 +85,6 @@ public class DefaultModelFactory {
     private final Set<PostalCommunity> postalCommunities;
     private final Set<Canton> cantons;
     private final Set<District> districts;
-  }
-
-  @EqualsAndHashCode(of = "number")
-  @ToString
-  @Getter
-  @Builder
-  private static class DefaultPoliticalCommunity implements PoliticalCommunity {
-
-    private final String number;
-    private final String name;
-    private final String shortName;
-    private final LocalDate lastUpdate;
-  }
-
-  @EqualsAndHashCode(of = {"zipCode", "zipCodeAddition"})
-  @ToString
-  @Getter
-  @Builder
-  private static class DefaultPostalCommunity implements PostalCommunity {
-
-    private final String zipCode;
-    private final String zipCodeAddition;
-    private final String name;
-    private final String politicalCommunityNumber;
   }
 
   @EqualsAndHashCode(of = "code")
@@ -127,5 +105,31 @@ public class DefaultModelFactory {
 
     private final String number;
     private final String name;
+    private final Canton canton;
+  }
+
+  @EqualsAndHashCode(of = "number")
+  @ToString
+  @Getter
+  @Builder
+  private static class DefaultPoliticalCommunity implements PoliticalCommunity {
+
+    private final String number;
+    private final String name;
+    private final String shortName;
+    private final LocalDate lastUpdate;
+    private final District district;
+  }
+
+  @EqualsAndHashCode(of = {"zipCode", "zipCodeAddition"})
+  @ToString
+  @Getter
+  @Builder
+  private static class DefaultPostalCommunity implements PostalCommunity {
+
+    private final String zipCode;
+    private final String zipCodeAddition;
+    private final String name;
+    private final String politicalCommunityNumber;
   }
 }

@@ -6,7 +6,9 @@ import ch.aaap.assignment.raw.CSVPoliticalCommunity;
 import ch.aaap.assignment.raw.CSVPostalCommunity;
 import ch.aaap.assignment.raw.CSVUtil;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class Application {
 
@@ -42,8 +44,9 @@ public class Application {
    * @return amount of political communities in given canton
    */
   public long getAmountOfPoliticalCommunitiesInCanton(String cantonCode) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return countOrThrow(
+        model.getPoliticalCommunities(),
+        pc -> cantonCode.equals(pc.getCanton().getCode()));
   }
 
   /**
@@ -51,8 +54,9 @@ public class Application {
    * @return amount of districts in given canton
    */
   public long getAmountOfDistrictsInCanton(String cantonCode) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return countOrThrow(
+        model.getDistricts(),
+        pc -> cantonCode.equals(pc.getCanton().getCode()));
   }
 
   /**
@@ -60,8 +64,17 @@ public class Application {
    * @return amount of districts in given canton
    */
   public long getAmountOfPoliticalCommunitiesInDistrict(String districtNumber) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return countOrThrow(
+        model.getPoliticalCommunities(),
+        pc -> districtNumber.equals(pc.getDistrict().getNumber()));
+  }
+
+  private static <T> long countOrThrow(Collection<T> list, Predicate<T> filter) {
+    return list.stream()
+        .filter(filter)
+        .mapToInt(pc -> 1)
+        .reduce(Integer::sum)
+        .orElseThrow(() -> new IllegalArgumentException("Nothing found, value expected"));
   }
 
   /**
@@ -89,7 +102,6 @@ public class Application {
    * @return amount of canton
    */
   public long getAmountOfCantons() {
-    // TODO implementation
     return model.getCantons().size();
   }
 
