@@ -8,5 +8,5 @@ public interface PostalCommunity {
 
   public String getName();
 
-  public String getPoliticalCommunityNumber();
+  public PoliticalCommunity getPoliticalCommunity();
 }

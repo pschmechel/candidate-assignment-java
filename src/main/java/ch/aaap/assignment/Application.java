@@ -2,6 +2,8 @@ package ch.aaap.assignment;
 
 import ch.aaap.assignment.model.DefaultModelFactory;
 import ch.aaap.assignment.model.Model;
+import ch.aaap.assignment.model.PoliticalCommunity;
+import ch.aaap.assignment.model.PostalCommunity;
 import ch.aaap.assignment.raw.CSVPoliticalCommunity;
 import ch.aaap.assignment.raw.CSVPostalCommunity;
 import ch.aaap.assignment.raw.CSVUtil;
@@ -9,6 +11,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Application {
 
@@ -82,8 +85,10 @@ public class Application {
    * @return district that belongs to specified zip code
    */
   public Set<String> getDistrictsForZipCode(String zipCode) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return model.getPostalCommunities().stream()
+        .filter(pc -> zipCode.equals(pc.getZipCode()))
+        .map(pc -> pc.getPoliticalCommunity().getDistrict().getName())
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -92,8 +97,11 @@ public class Application {
    */
   public LocalDate getLastUpdateOfPoliticalCommunityByPostalCommunityName(
       String postalCommunityName) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return model.getPostalCommunities().stream()
+        .filter(pc -> postalCommunityName.equals(pc.getName()))
+        .map(pc -> pc.getPoliticalCommunity().getLastUpdate())
+        .findFirst()
+        .orElse(null);
   }
 
   /**
@@ -111,7 +119,11 @@ public class Application {
    * @return amount of political communities without postal communities
    */
   public long getAmountOfPoliticalCommunityWithoutPostalCommunities() {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    Set<PoliticalCommunity> politicalCommunities = model.getPoliticalCommunities();
+    Set<PoliticalCommunity> withPostalCommunity = model.getPostalCommunities().stream()
+        .map(PostalCommunity::getPoliticalCommunity)
+        .collect(Collectors.toSet());
+
+    return politicalCommunities.size() - withPostalCommunity.size();
   }
 }
