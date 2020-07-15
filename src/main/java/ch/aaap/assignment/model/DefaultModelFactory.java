@@ -3,11 +3,13 @@ package ch.aaap.assignment.model;
 import ch.aaap.assignment.raw.CSVPoliticalCommunity;
 import ch.aaap.assignment.raw.CSVPostalCommunity;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,12 +22,29 @@ public class DefaultModelFactory {
   public static Model createModel(
       Set<CSVPoliticalCommunity> politicalCommunities, Set<CSVPostalCommunity> postalCommunities) {
 
-    Map<String, DefaultPoliticalCommunity> defaultPoliticalCommunities = politicalCommunities
-        .stream()
-        .map(DefaultModelFactory::mapToDefaultPoliticalCommunity)
-        .collect(Collectors.toMap(PoliticalCommunity::getNumber, Function.identity()));
+    Map<String, Set<PostalCommunity>> postalCommunitiesByPoliticalNumber = new HashMap<>();
 
-    Set<District> districts = defaultPoliticalCommunities.values().stream()
+    for (CSVPostalCommunity postalCommunity : postalCommunities) {
+      PostalCommunity defaultPostalCommunity = mapToDefaultPostalCommunity(postalCommunity);
+      String key = postalCommunity.getPoliticalCommunityNumber();
+
+      if (postalCommunitiesByPoliticalNumber.containsKey(key)) {
+        postalCommunitiesByPoliticalNumber.put(
+            key,
+            Stream.concat(List.of(defaultPostalCommunity).stream(),
+                postalCommunitiesByPoliticalNumber.get(key).stream())
+                .collect(Collectors.toSet()));
+      } else {
+        postalCommunitiesByPoliticalNumber.put(key, Set.of(defaultPostalCommunity));
+      }
+    }
+
+    Set<PoliticalCommunity> defaultPoliticalCommunities = politicalCommunities.stream()
+        .map(pc -> mapToDefaultPoliticalCommunity(pc,
+            postalCommunitiesByPoliticalNumber.getOrDefault(pc.getNumber(), Set.of())))
+        .collect(Collectors.toSet());
+
+    Set<District> districts = defaultPoliticalCommunities.stream()
         .map(PoliticalCommunity::getDistrict)
         .collect(Collectors.toSet());
 
@@ -33,37 +52,35 @@ public class DefaultModelFactory {
         .map(District::getCanton)
         .collect(Collectors.toSet());
 
-    Set<PostalCommunity> defaultPostalCommunities = postalCommunities.stream()
-        .map(pc -> mapToDefaultPostalCommunity(pc,
-            defaultPoliticalCommunities.get(pc.getPoliticalCommunityNumber())))
-        .collect(Collectors.toSet());
-
     return DefaultModel.builder()
-        .politicalCommunities(new HashSet<>(defaultPoliticalCommunities.values()))
-        .postalCommunities(defaultPostalCommunities)
+        .politicalCommunities(defaultPoliticalCommunities)
+        .postalCommunities(
+            postalCommunitiesByPoliticalNumber.values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()))
         .cantons(cantons)
         .districts(districts)
         .build();
   }
 
-  private static DefaultPostalCommunity mapToDefaultPostalCommunity(
-      CSVPostalCommunity pc, PoliticalCommunity politicalCommunity) {
+  private static DefaultPostalCommunity mapToDefaultPostalCommunity(CSVPostalCommunity pc) {
     return DefaultPostalCommunity.builder()
         .zipCode(pc.getZipCode())
         .zipCodeAddition(pc.getZipCodeAddition())
         .name(pc.getName())
-        .politicalCommunity(politicalCommunity)
         .build();
   }
 
   private static DefaultPoliticalCommunity mapToDefaultPoliticalCommunity(
-      CSVPoliticalCommunity pc) {
+      CSVPoliticalCommunity pc,
+      Set<PostalCommunity> postalCommunities) {
     return DefaultPoliticalCommunity.builder()
         .number(pc.getNumber())
         .name(pc.getName())
         .shortName(pc.getShortName())
         .lastUpdate(pc.getLastUpdate())
         .district(mapToDefaultDistrict(pc))
+        .postalCommunities(postalCommunities)
         .build();
   }
 
@@ -125,9 +142,10 @@ public class DefaultModelFactory {
     private final String shortName;
     private final LocalDate lastUpdate;
     private final District district;
+    private final Set<PostalCommunity> postalCommunities;
   }
 
-  //  @EqualsAndHashCode(of = {"name", "zipCode"})
+  @EqualsAndHashCode(of = {"name", "zipCode"})
   @ToString
   @Getter
   @Builder
@@ -136,6 +154,5 @@ public class DefaultModelFactory {
     private final String zipCode;
     private final String zipCodeAddition;
     private final String name;
-    private final PoliticalCommunity politicalCommunity;
   }
 }
