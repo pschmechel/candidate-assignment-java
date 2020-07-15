@@ -48,7 +48,7 @@ public class Application {
   public long getAmountOfPoliticalCommunitiesInCanton(String cantonCode) {
     return countOrThrow(
         model.getPoliticalCommunities(),
-        pc -> cantonCode.equals(pc.getCanton().getCode()));
+        pc -> cantonCode != null && cantonCode.equals(pc.getCanton().getCode()));
   }
 
   /**
@@ -58,7 +58,7 @@ public class Application {
   public long getAmountOfDistrictsInCanton(String cantonCode) {
     return countOrThrow(
         model.getDistricts(),
-        pc -> cantonCode.equals(pc.getCanton().getCode()));
+        pc -> cantonCode != null && cantonCode.equals(pc.getCanton().getCode()));
   }
 
   /**
@@ -68,7 +68,7 @@ public class Application {
   public long getAmountOfPoliticalCommunitiesInDistrict(String districtNumber) {
     return countOrThrow(
         model.getPoliticalCommunities(),
-        pc -> districtNumber.equals(pc.getDistrict().getNumber()));
+        pc -> districtNumber != null && districtNumber.equals(pc.getDistrict().getNumber()));
   }
 
   private static <T> long countOrThrow(Collection<T> list, Predicate<T> filter) {
@@ -86,7 +86,7 @@ public class Application {
   public Set<String> getDistrictsForZipCode(String zipCode) {
     return model.getPoliticalCommunities().stream()
         .filter(pc -> pc.getPostalCommunities().stream()
-            .anyMatch(post -> zipCode.equals(post.getZipCode())))
+            .anyMatch(post -> zipCode != null && zipCode.equals(post.getZipCode())))
         .map(politicalCommunity -> politicalCommunity.getDistrict().getName())
         .collect(Collectors.toSet());
   }
@@ -99,7 +99,8 @@ public class Application {
       String postalCommunityName) {
     return model.getPoliticalCommunities().stream()
         .filter(pc -> pc.getPostalCommunities().stream()
-            .anyMatch(postalCommunity -> postalCommunityName.equals(postalCommunity.getName())))
+            .anyMatch(postalCommunity -> postalCommunityName != null
+                && postalCommunityName.equals(postalCommunity.getName())))
         .map(PoliticalCommunity::getLastUpdate)
         .findFirst()
         .orElse(null);
