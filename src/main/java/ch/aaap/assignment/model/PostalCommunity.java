@@ -7,6 +7,4 @@ public interface PostalCommunity {
   public String getZipCodeAddition();
 
   public String getName();
-
-  // TODO add more features here representing the relations
 }

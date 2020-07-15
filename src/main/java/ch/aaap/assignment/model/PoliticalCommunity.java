@@ -11,6 +11,4 @@ public interface PoliticalCommunity {
   public String getShortName();
 
   public LocalDate getLastUpdate();
-
-  // TODO add more features here representing the relations
 }

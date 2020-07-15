@@ -1,5 +1,6 @@
 package ch.aaap.assignment;
 
+import ch.aaap.assignment.model.DefaultModelFactory;
 import ch.aaap.assignment.model.Model;
 import ch.aaap.assignment.raw.CSVPoliticalCommunity;
 import ch.aaap.assignment.raw.CSVPostalCommunity;
@@ -19,15 +20,19 @@ public class Application {
     new Application();
   }
 
-  /** Reads the CSVs and initializes a in memory model */
+  /**
+   * Reads the CSVs and initializes a in memory model
+   */
   private void initModel() {
     Set<CSVPoliticalCommunity> politicalCommunities = CSVUtil.getPoliticalCommunities();
     Set<CSVPostalCommunity> postalCommunities = CSVUtil.getPostalCommunities();
 
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    model = DefaultModelFactory.createModel(politicalCommunities, postalCommunities);
   }
-  /** @return model */
+
+  /**
+   * @return model
+   */
   public Model getModel() {
     return model;
   }
