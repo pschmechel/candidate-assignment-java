@@ -20,6 +20,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class DefaultModelFactory {
 
+  private static final Map<String, DefaultCanton> cantonCache = new HashMap<>();
+  private static final Map<String, DefaultDistrict> districtCache = new HashMap<>();
+  private static final Map<String, DefaultPostalCommunity> postalCache = new HashMap<>();
+
   public static Model createModel(
       Set<CSVPoliticalCommunity> csvPoliticalCommunities,
       Set<CSVPostalCommunity> csvPostalCommunities) {
@@ -67,16 +71,20 @@ public class DefaultModelFactory {
   }
 
   private static DefaultPostalCommunity mapToDefaultPostalCommunity(CSVPostalCommunity pc) {
-    return DefaultPostalCommunity.builder()
-        .zipCode(pc.getZipCode())
-        .zipCodeAddition(pc.getZipCodeAddition())
-        .name(pc.getName())
-        .build();
+    String primaryKey = pc.getName() + pc.getZipCode();
+
+    return postalCache.computeIfAbsent(primaryKey, key ->
+        DefaultPostalCommunity.builder()
+            .zipCode(pc.getZipCode())
+            .zipCodeAddition(pc.getZipCodeAddition())
+            .name(pc.getName())
+            .build());
   }
 
   private static DefaultPoliticalCommunity mapToDefaultPoliticalCommunity(
       CSVPoliticalCommunity pc,
       Set<PostalCommunity> postalCommunities) {
+
     return DefaultPoliticalCommunity.builder()
         .number(pc.getNumber())
         .name(pc.getName())
@@ -88,18 +96,22 @@ public class DefaultModelFactory {
   }
 
   private static DefaultDistrict mapToDefaultDistrict(CSVPoliticalCommunity pc) {
-    return DefaultDistrict.builder()
-        .number(pc.getDistrictNumber())
-        .name(pc.getDistrictName())
-        .canton(mapToDefaultCanton(pc))
-        .build();
+    return districtCache.computeIfAbsent(
+        pc.getDistrictNumber(),
+        key -> DefaultDistrict.builder()
+            .number(key)
+            .name(pc.getDistrictName())
+            .canton(mapToDefaultCanton(pc))
+            .build());
   }
 
   private static DefaultCanton mapToDefaultCanton(CSVPoliticalCommunity pc) {
-    return DefaultCanton.builder()
-        .code(pc.getCantonCode())
-        .name(pc.getCantonName())
-        .build();
+    return cantonCache.computeIfAbsent(
+        pc.getCantonCode(),
+        key -> DefaultCanton.builder()
+            .code(key)
+            .name(pc.getCantonName())
+            .build());
   }
 
   @ToString
